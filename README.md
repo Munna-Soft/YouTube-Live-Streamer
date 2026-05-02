@@ -1,5 +1,6 @@
 <!-- GitAds-Verify: FBIAOUN75OFZB4WVVV26CZAKZAWVGRVE -->
-
+## GitAds Sponsored
+[![Sponsored by GitAds](https://gitads.dev/v1/ad-serve?source=munna-soft/youtube-live-streamer@github)](https://gitads.dev/v1/ad-track?source=munna-soft/youtube-live-streamer@github)
 
 # 🎬 YouTube Live Streamer – Munna MasterMind
 
@@ -113,3 +114,5 @@ Feel free to modify, share, and improve. Credit to the original author is apprec
 **🎥 Happy streaming!**
 
 <!-- GitAds-Verify: FBIAOUN75OFZB4WVVV26CZAKZAWVGRVE -->
+## GitAds Sponsored
+[![Sponsored by GitAds](https://gitads.dev/v1/ad-serve?source=munna-soft/youtube-live-streamer@github)](https://gitads.dev/v1/ad-track?source=munna-soft/youtube-live-streamer@github)
