@@ -7,7 +7,12 @@ REM ==================== CONFIG ====================
 set "ROOT=%~dp0"
 set "FFMPEG_DIR=%ROOT%FFmpeg"
 set "INPUT_DIR=%ROOT%input_video"
-set "TEMP_DIR=%ROOT%Temp_LiveStream"
+
+:MAKE_UNIQUE_TEMP
+set "UNIQUE_ID=%RANDOM%%RANDOM%%TIME:~6,2%%TIME:~9,2%"
+set "TEMP_DIR=%TEMP%\YTStream_%UNIQUE_ID%"
+if exist "%TEMP_DIR%" goto MAKE_UNIQUE_TEMP
+mkdir "%TEMP_DIR%" 2>nul
 
 REM ==================== MENU ====================
 :MENU
@@ -15,6 +20,7 @@ cls
 echo.
 echo    ╔══════════════════════════════════════════════╗
 echo    ║    YouTube Live Streamer - Munna MasterMind  ║
+echo    ║         (Multi-Instance Ready)               ║
 echo    ╠══════════════════════════════════════════════╣
 echo    ║  1. Setup Automatic Dependency               ║
 echo    ║  2. Start Live Stream                        ║
@@ -23,7 +29,8 @@ echo    ║  4. Exit Program                             ║
 echo    ╚══════════════════════════════════════════════╝
 echo.
 choice /c 1234 /n /m "Select Option [1-4]: "
-if errorlevel 4 exit /b
+echo.
+if errorlevel 4 goto CLEANUP_EXIT
 if errorlevel 3 goto CONTACT
 if errorlevel 2 goto CHECK_AND_START
 if errorlevel 1 goto SETUP_DEPENDENCIES
@@ -92,7 +99,6 @@ REM ============ START LIVE STREAM ============
 call :CHECK_FFMPEG
 
 if not exist "%INPUT_DIR%" mkdir "%INPUT_DIR%"
-if not exist "%TEMP_DIR%" mkdir "%TEMP_DIR%"
 
 set i=0
 echo =========== Available Videos ===========
@@ -115,15 +121,18 @@ if not defined VIDEO echo ❌ Invalid selection & pause & goto MENU
 echo.
 set /p "STREAM_KEY=Enter Your YouTube Stream Key: "
 if "%STREAM_KEY%"=="" (
+    echo.
     echo ❌ Stream key cannot be empty!
+    echo.
     pause
     goto MENU
 )
 
 echo.
-echo Stream Duration:
+echo =========== Stream Duration ===========
 echo    0 = Unlimited (until you stop manually)
 echo    1 = Manual Input (you specify minutes or HH:MM)
+echo ------------------------------------------
 set /p "DURCHOICE=Your choice [0-1]: "
 if "%DURCHOICE%"=="0" (
     set "DURATION="
@@ -145,13 +154,13 @@ echo     2. 720p (1280x720)
 echo     3. 1080p (1920x1080)
 echo     4. 2K (2560x1440)
 echo     5. 4K (3840x2160)
+echo ------------------------------------------
 set /p "RESCHOICE=Enter choice [1-5]: "
 if "%RESCHOICE%"=="" set "RESCHOICE=1"
 
 if "%RESCHOICE%"=="1" (
     set "WIDTH=!ORIG_W!" & set "HEIGHT=!ORIG_H!" & set "RESNAME=Original"
     set "SCALE_FILTER="
-    REM --- Fixed bitrate logic ---
     if !ORIG_H! LEQ 720 (
         set "VBIT=2500k" & set "MAXR=2500k" & set "BUF=5000k"
     )
@@ -184,12 +193,10 @@ if "%RESCHOICE%"=="1" (
     echo ❌ Invalid choice & pause & goto MENU
 )
 
-REM Check video audio
 "%FFMPEG_DIR%\ffprobe.exe" -v error -select_streams a -show_entries stream=index -of csv=p=0 "%VIDEO%" > "%TEMP_DIR%\has_audio.txt" 2>nul
 set /p "HAS_AUDIO=" < "%TEMP_DIR%\has_audio.txt"
 if "!HAS_AUDIO!"=="" (set "VID_HAS_AUDIO=0") else (set "VID_HAS_AUDIO=1")
 
-REM Create a short merged clip
 set "MIX=%TEMP_DIR%\mix_short_%RESNAME%.mp4"
 echo.
 echo Preparing streaming source (%RESNAME%)...
@@ -230,6 +237,8 @@ if defined DURATION (
 
 del /q "%TEMP_DIR%\has_audio.txt" 2>nul
 del /q "%MIX%" 2>nul
+rd "%TEMP_DIR%" 2>nul
+
 echo.
 echo Stream ended.
 pause
@@ -237,16 +246,15 @@ goto MENU
 
 REM ============ ASK DURATION ============
 :ASK_DURATION
-cls
 echo.
-echo Examples Duration:
+echo =========== Examples Duration ===========
 echo    5       = 5 minutes
 echo    10      = 10 minutes
 echo    1:30    = 1 hour 30 minutes
 echo    2:45    = 2 hours 45 minutes
 echo    10:15   = 10 hours 15 minutes
 echo    24:00   = 24 hours 0 minutes
-echo.
+echo ------------------------------------------
 set /p "USERDUR=Enter desired stream duration: "
 if "%USERDUR%"=="" goto BAD_DUR
 set "USERDUR=%USERDUR: =%"
@@ -295,3 +303,8 @@ echo   ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 echo.
 pause
 goto MENU
+
+:CLEANUP_EXIT
+if exist "%TEMP_DIR%" rd /s /q "%TEMP_DIR%" 2>nul
+exit /b
+REM ==================== Secure Code By Munna MasterMind ====================
